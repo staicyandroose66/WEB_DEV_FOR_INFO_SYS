@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+ 
+    <title>kids shop</title>
+</head>
+<body>
+   <div class="container">
+    <div class="row ">
+        <div class="col-md-12">
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+                <a class="navbar-brand" href="#">Kids Shop</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                  <ul class="navbar-nav">
+                    <li class="nav-item active">
+                      <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="#">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <button id="cart" data-html="true" type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="bottom" data-content="Vivamus
+                        sagittis lacus vel augue laoreet rutrum faucibus." onclick="DisplayCart()">
+                          Cart(0)
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link disabled" href="#">Disabled</a>
+                    </li>
+                  </ul>
+                  <ul class="navbar-nav mr-auto">
+                    {% if user.is_authenticated %}
+                    
+                    <li class="nav-item">
+                      <a class="nav-link" href="/logout" onclick="logClear()">Logout</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="#">Welcome, {{user.username}}</a>
+                    </li>
+              
+                    {% else %}
+              
+                    <li class="nav-item">
+                      <a class="nav-link" href="/login">Login</a>
+                    </li>
+              
+                    {% endif %}
+                  </ul>
+                </div>
+              </nav>
+        </div>
+    </div> 
+    <div class="row m-5">
+      <div class="col-md-12">
+        <h1>Review your order</h1>
+        <hr>
+      </div>
+    </div>
+    <div class="row m-5">
+      <div class="col-md-12">
+        <h4>Items in your cart</h4>
+        <hr>
+      </div>
+    </div>
+      <div class="row m-5">
+        <div class="col-md-12">
+           
+                    <ul class="list-group" id="item_list">
+                            
+                    </ul>    
+            </div>
+        </div>   
+ 
+        <div class="row m-5">
+      <div class="col-md-12">
+        <h1>Enter shipping details</h1>
+        <hr>
+      </div>
+    </div>
+        <div class="row m-5">
+          <div class="col-md-12">
+              <form method="POST" >
+                {% csrf_token %}
+                    <input type="hidden" id="items" name="items">
+                  <div class="form-row">
+                    <div class="form-group col-md-6">
+                      <label for="inputEmail4">Name</label>
+                      {% if user.is_authenticated %}
+                      <input id="name" name="name"  type="text" class="form-control" id="inputEmail4" placeholder="John" value="{{user.username}}">
+                      {% else %}
+                      <input id="name" name="name" type="text" class="form-control" id="inputEmail4" placeholder="John">
+                      {% endif %}
+                    </div>
+                    <div class="form-group col-md-6">
+                      <label for="inputPassword4">Email</label>
+                      <input id="email" name="email" type="text" class="form-control" id="inputPassword4" placeholder="john@john.com">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="inputAddress">Address</label>
+                    <input id="address" name="address" type="text" class="form-control" id="inputAddress" placeholder="1234 Main St">
+                  </div>
+                  
+                  <div class="form-row">
+                    <div class="form-group col-md-6">
+                      <label for="inputCity">City</label>
+                      <input id="city" name="city" type="text" class="form-control" id="inputCity">
+                    </div>
+                    <div class="form-group col-md-4">
+                      <label for="inputState">State</label>
+                      <input id="state" name="state" type="text" class="form-control" id="inputCity">
+                 
+                    </div>
+                    <div class="form-group col-md-2">
+                      <label for="inputZip">Zip</label>
+                      <input id="zipcode" name="zipcode" type="text" class="form-control" id="inputZip">
+                    </div>
+                    <div class="form-group col-md-2">
+                      <label for="inputZip">Amount to be paid</label>
+                      <input readonly="" type="text" class="form-control" id="total" name="total">
+                    </div>
+                  </div>
+                  
+                  
+                  <button type="submit" class="btn btn-warning" onclick="deleteItems()">Place Order</button>
+                </form>
+          
+          </div>
+ 
+        </div>
+    </div>
+</body>
+<script type="text/javascript">
+if(localStorage.getItem('cart')==null){
+  var cart ={};
+}
+else{
+  cart = JSON.parse(localStorage.getItem('cart'));
+}
+let total = 0;
+for(item in cart){
+  let name = cart[item][1];
+  let quantity = cart[item][0];
+  let price = cart[item][2];
+  total = total + cart[item][2];
+ 
+ 
+ 
+ 
+ 
+ 
+  itemString = `  <li class="list-group-item d-flex justify-content-between align-items-center">${quantity} of  ${name}     <span class="badge badge-warning badge-pill">${price}</span></li>`;
+ 
+  $('#item_list').append(itemString);
+ 
+ 
+}
+totalPrice = ` <li class ="list-group-item d-flex justify-content-between align-items-center"><b>Your total</b>
+  ${total}</li> `
+$('#total').val(total);
+$('#item_list').append(totalPrice);
+$('#items').val(JSON.stringify(cart));
+
+function deleteItems() {
+        // Clear localStorage items 
+        localStorage.clear();
+        alert("YOUR ITEMS HAS CHECKEDOUT")
+      }
+      function logClear() {
+        // Clear localStorage items 
+        localStorage.clear();
+      }
+</script>
+</html>
